@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using PortableSteam;
 using PortableSteam.Interfaces.General.ISteamUser;
 using SteamWebApiTest.v2;
@@ -24,6 +25,7 @@ namespace SteamWebApiTest
 			var repository = new DatabaseRepository(database);
 			var scanner = new PlayerScannerEngine(steamIdQueue, database);
 
+			Export(repository);return;
 			//ShowStats(repository);return;
 			steamIdQueue.Push(76561198029142573);
 			scanner.FindFriends(76561198029142573);
@@ -51,6 +53,25 @@ namespace SteamWebApiTest
 			{
 				
 			}
+		}
+
+		private static void Export(DatabaseRepository repository)
+		{
+			Console.WriteLine("Loading players from the database...");
+			List<SteamUser> list = repository.Load();
+
+			Console.WriteLine("Exporting....");
+			var task = Task.Factory.StartNew(() =>
+			{
+				string output = JsonConvert.SerializeObject(list);
+				File.WriteAllText("export.json", output);
+			});
+
+			task.Wait();
+			Console.WriteLine("Done exporting");
+
+			Console.WriteLine("OK Computer?");
+			Console.Read();
 		}
 
 		private static void ShowStats(DatabaseRepository repository)
@@ -93,7 +114,7 @@ namespace SteamWebApiTest
 			Console.WriteLine("Community average hours: {0}", community.Median(x => x.TimePlayed.TotalHours));
 			Percentage.ConsoleWrite("Community below 30 hours", communityBelow30, communityCount);
 
-			Console.WriteLine("OK?");
+			Console.WriteLine("OK Computer?");
 			Console.Read();
 
 			return;
